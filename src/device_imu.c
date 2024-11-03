@@ -33,7 +33,7 @@
 #include <string.h>
 
 #include <Fusion/Fusion.h>
-#include <json-c/json.h>
+#include "json.h"
 
 #include <libkern/OSByteOrder.h>
 #include <machine/endian.h>

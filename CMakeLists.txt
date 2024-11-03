@@ -8,10 +8,19 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_subdirectory(modules/hidapi)
 add_subdirectory(modules/Fusion/Fusion)
-add_subdirectory(modules/json-c)
+
+add_subdirectory(modules/hidapi)
 set_target_properties(hidapi_darwin PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    STATIC_LIBRARY TRUE
+)
+
+set(BUILD_SHARED_LIBS OFF)
+set(DISABLE_SHARED ON)
+set(BUILD_STATIC_LIBS ON)
+add_subdirectory(modules/json-c)
+set_target_properties(json-c-static PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     STATIC_LIBRARY TRUE
 )
@@ -45,7 +54,7 @@ target_include_directories(xrealair
 target_link_libraries(xrealair PRIVATE
     -static hidapi_darwin
     -static Fusion
-    -static json-c
+    -static json-c-static
     m ${IOKIT} ${COREFOUNDATION}
 )
 

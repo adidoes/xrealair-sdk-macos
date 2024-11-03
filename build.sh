@@ -2,5 +2,5 @@
 rm -rf build && \
 mkdir build && \
 cd build && \
-cmake .. && \
+cmake .. -Wno-dev && \
 make -j$(sysctl -n hw.physicalcpu)

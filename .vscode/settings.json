@@ -9,6 +9,7 @@
     "json_util.h": "c",
     "string.h": "c",
     "json_object_iterator.h": "c",
-    "hidapi.h": "c"
+    "hidapi.h": "c",
+    "fusionaxes.h": "c"
   }
 }
