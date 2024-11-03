@@ -1,0 +1,9 @@
+[submodule "modules/Fusion"]
+    path = modules/Fusion
+    url = https://github.com/xioTechnologies/Fusion.git
+[submodule "modules/hidapi"]
+    path = modules/hidapi
+    url = https://github.com/libusb/hidapi.git
+[submodule "modules/json-c"]
+    path = modules/json-c
+    url = https://github.com/json-c/json-c.git

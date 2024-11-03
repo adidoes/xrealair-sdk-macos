@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "fusion.h": "c",
+    "osbyteorder.h": "c",
+    "endian.h": "c",
+    "device_mcu.h": "c",
+    "json.h": "c",
+    "linkhash.h": "c",
+    "json_util.h": "c",
+    "string.h": "c",
+    "json_object_iterator.h": "c",
+    "hidapi.h": "c"
+  }
+}
