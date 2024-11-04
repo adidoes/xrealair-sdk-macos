@@ -38,7 +38,7 @@ set_target_properties(xrealair PROPERTIES
     SOVERSION 0.1.0
 )
 
-target_compile_options(xrealair PRIVATE -Wall -Wextra -fPIC)
+target_compile_options(xrealair PRIVATE -Wall -Wextra -fPIC -DNDEBUG)
 
 find_library(IOKIT IOKit)
 find_library(COREFOUNDATION CoreFoundation)

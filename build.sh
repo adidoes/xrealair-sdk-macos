@@ -2,5 +2,5 @@
 rm -rf build && \
 mkdir build && \
 cd build && \
-cmake .. -Wno-dev && \
+cmake .. -DCMAKE_BUILD_TYPE=Release -Wno-dev && \
 make -j$(sysctl -n hw.physicalcpu)
