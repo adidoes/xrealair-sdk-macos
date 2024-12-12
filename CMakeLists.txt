@@ -34,8 +34,8 @@ add_library(xrealair SHARED
 )
 set_target_properties(xrealair PROPERTIES
 	OUTPUT_NAME "xrealair"
-    VERSION 0.1.0
-    SOVERSION 0.1.0
+    VERSION 0.1.1
+    SOVERSION 0.1.1
 )
 
 target_compile_options(xrealair PRIVATE -Wall -Wextra -fPIC -DNDEBUG)
@@ -45,7 +45,7 @@ find_library(COREFOUNDATION CoreFoundation)
 
 target_include_directories(xrealair
     BEFORE PUBLIC include
-    SYSTEM BEFORE PRIVATE 
+    SYSTEM BEFORE PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/hidapi
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/Fusion
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/json-c

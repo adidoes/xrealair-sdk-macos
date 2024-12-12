@@ -322,6 +322,11 @@ device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_
 	if (recv_payload_msg(device, DEVICE_IMU_MSG_GET_CAL_DATA_LENGTH, 4, (uint8_t *)&calibration_len))
 	{
 		char *calibration_data = malloc(calibration_len + 1);
+		if (!calibration_data)
+		{
+			device_imu_error("Failed to allocate calibration data buffer");
+			return DEVICE_IMU_ERROR_NO_ALLOCATION;
+		}
 
 		uint32_t position = 0;
 		while (position < calibration_len)
@@ -330,14 +335,17 @@ device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_
 
 			if (!send_payload_msg(device, DEVICE_IMU_MSG_CAL_DATA_GET_NEXT_SEGMENT, 0, NULL))
 			{
-				break;
+				free(calibration_data);
+				return DEVICE_IMU_ERROR_PAYLOAD_FAILED;
 			}
 
 			const uint8_t next = (remaining > 56 ? 56 : remaining);
 
-			if (!recv_payload_msg(device, DEVICE_IMU_MSG_CAL_DATA_GET_NEXT_SEGMENT, next, (uint8_t *)calibration_data + position))
+			if (!recv_payload_msg(device, DEVICE_IMU_MSG_CAL_DATA_GET_NEXT_SEGMENT, next,
+														(uint8_t *)calibration_data + position))
 			{
-				break;
+				free(calibration_data);
+				return DEVICE_IMU_ERROR_PAYLOAD_FAILED;
 			}
 
 			position += next;
@@ -346,20 +354,89 @@ device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_
 		calibration_data[calibration_len] = '\0';
 
 		struct json_tokener *tokener = json_tokener_new();
+		if (!tokener)
+		{
+			free(calibration_data);
+			device_imu_error("Failed to create JSON tokener");
+			return DEVICE_IMU_ERROR_NO_ALLOCATION;
+		}
+
 		struct json_object *root = json_tokener_parse_ex(tokener, calibration_data, calibration_len);
+		free(calibration_data); // We can free this now as it's been parsed
+
+		if (!root)
+		{
+			json_tokener_free(tokener);
+			device_imu_error("Failed to parse calibration data");
+			return DEVICE_IMU_ERROR_PARSING_FAILED;
+		}
+
 		struct json_object *imu = json_object_object_get(root, "IMU");
+		if (!imu)
+		{
+			json_object_put(root);
+			json_tokener_free(tokener);
+			device_imu_error("Failed to get IMU object");
+			return DEVICE_IMU_ERROR_PARSING_FAILED;
+		}
+
 		struct json_object *dev1 = json_object_object_get(imu, "device_1");
+		if (!dev1)
+		{
+			json_object_put(root);
+			json_tokener_free(tokener);
+			device_imu_error("Failed to get device_1 object");
+			return DEVICE_IMU_ERROR_PARSING_FAILED;
+		}
 
-		FusionVector accel_bias = json_object_get_vector(json_object_object_get(dev1, "accel_bias"));
-		FusionQuaternion accel_q_gyro = json_object_get_quaternion(json_object_object_get(dev1, "accel_q_gyro"));
-		FusionVector gyro_bias = json_object_get_vector(json_object_object_get(dev1, "gyro_bias"));
-		FusionQuaternion gyro_q_mag = json_object_get_quaternion(json_object_object_get(dev1, "gyro_q_mag"));
-		FusionVector mag_bias = json_object_get_vector(json_object_object_get(dev1, "mag_bias"));
-		FusionQuaternion imu_noises = json_object_get_quaternion(json_object_object_get(dev1, "imu_noises"));
-		FusionVector scale_accel = json_object_get_vector(json_object_object_get(dev1, "scale_accel"));
-		FusionVector scale_gyro = json_object_get_vector(json_object_object_get(dev1, "scale_gyro"));
-		FusionVector scale_mag = json_object_get_vector(json_object_object_get(dev1, "scale_mag"));
+// Helper macro for safe vector extraction
+#define GET_VECTOR(name, dest)                                    \
+	do                                                              \
+	{                                                               \
+		struct json_object *obj = json_object_object_get(dev1, name); \
+		if (obj)                                                      \
+		{                                                             \
+			dest = json_object_get_vector(obj);                         \
+		}                                                             \
+	} while (0)
 
+// Helper macro for safe quaternion extraction
+#define GET_QUATERNION(name, dest)                                \
+	do                                                              \
+	{                                                               \
+		struct json_object *obj = json_object_object_get(dev1, name); \
+		if (obj)                                                      \
+		{                                                             \
+			dest = json_object_get_quaternion(obj);                     \
+		}                                                             \
+	} while (0)
+
+		// Initialize with defaults
+		FusionVector accel_bias = FUSION_VECTOR_ZERO;
+		FusionQuaternion accel_q_gyro = FUSION_IDENTITY_QUATERNION;
+		FusionVector gyro_bias = FUSION_VECTOR_ZERO;
+		FusionQuaternion gyro_q_mag = FUSION_IDENTITY_QUATERNION;
+		FusionVector mag_bias = FUSION_VECTOR_ZERO;
+		FusionQuaternion imu_noises = FUSION_IDENTITY_QUATERNION;
+		FusionVector scale_accel = FUSION_VECTOR_ONES;
+		FusionVector scale_gyro = FUSION_VECTOR_ONES;
+		FusionVector scale_mag = FUSION_VECTOR_ONES;
+
+		// Extract calibration data
+		GET_VECTOR("accel_bias", accel_bias);
+		GET_QUATERNION("accel_q_gyro", accel_q_gyro);
+		GET_VECTOR("gyro_bias", gyro_bias);
+		GET_QUATERNION("gyro_q_mag", gyro_q_mag);
+		GET_VECTOR("mag_bias", mag_bias);
+		GET_QUATERNION("imu_noises", imu_noises);
+		GET_VECTOR("scale_accel", scale_accel);
+		GET_VECTOR("scale_gyro", scale_gyro);
+		GET_VECTOR("scale_mag", scale_mag);
+
+#undef GET_VECTOR
+#undef GET_QUATERNION
+
+		// Apply calibration data
 		const FusionQuaternion accel_q_mag = FusionQuaternionMultiply(accel_q_gyro, gyro_q_mag);
 
 		device->calibration->gyroscopeMisalignment = FusionQuaternionToMatrix(accel_q_gyro);
@@ -376,8 +453,9 @@ device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_
 
 		device->calibration->noises = imu_noises;
 
+		// Cleanup JSON objects
+		json_object_put(root); // This frees the entire JSON object tree
 		json_tokener_free(tokener);
-		free(calibration_data);
 	}
 
 	if (!send_payload_msg_signal(device, DEVICE_IMU_MSG_START_IMU_DATA, 0x1))
