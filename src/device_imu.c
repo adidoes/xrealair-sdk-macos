@@ -849,7 +849,42 @@ static void apply_calibration(const device_imu_type *device,
 
 device_imu_error_type device_imu_clear(device_imu_type *device)
 {
-	return device_imu_read(device, 10);
+	if (!device)
+	{
+		device_imu_error("No device");
+		return DEVICE_IMU_ERROR_NO_DEVICE;
+	}
+
+	if (!device->handle)
+	{
+		device_imu_error("No handle");
+		return DEVICE_IMU_ERROR_NO_HANDLE;
+	}
+
+	static uint8_t buffer[MAX_PACKET_SIZE];
+	const int timeout_ms = 1;			// Short timeout for quick reads
+	const int max_attempts = 100; // Safety limit to prevent infinite loops
+	int attempts = 0;
+
+	// Drain the buffer without processing the data
+	while (attempts++ < max_attempts)
+	{
+		int result = hid_read_timeout(device->handle, buffer, sizeof(buffer), timeout_ms);
+
+		if (result < 0)
+		{
+			device_imu_error("Device may be unplugged during clear");
+			return DEVICE_IMU_ERROR_UNPLUGGED;
+		}
+
+		if (result == 0)
+		{
+			// No more data available
+			break;
+		}
+	}
+
+	return DEVICE_IMU_ERROR_NO_ERROR;
 }
 
 device_imu_error_type device_imu_calibrate(device_imu_type *device, uint32_t iterations, bool gyro, bool accel, bool magnet)
