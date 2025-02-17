@@ -65,7 +65,6 @@ extern "C"
 		DEVICE_IMU_ERROR_NOT_INITIALIZED = 13,
 		DEVICE_IMU_ERROR_PAYLOAD_FAILED = 14,
 		DEVICE_IMU_ERROR_UNKNOWN = 15,
-		DEVICE_IMU_ERROR_PARSING_FAILED = 16,
 	};
 
 	struct __attribute__((__packed__)) device_imu_packet_t
@@ -100,6 +99,9 @@ extern "C"
 	};
 
 	struct device_imu_ahrs_t;
+
+// increment this if we change the calibration struct
+#define XREAL_IMU_CALIBRATION_VERSION 1
 	struct device_imu_calibration_t;
 
 	struct device_imu_vec3_t
@@ -144,6 +146,7 @@ extern "C"
 	{
 		uint16_t vendor_id;
 		uint16_t product_id;
+		char *serial_number;
 
 		void *handle;
 
@@ -152,7 +155,6 @@ extern "C"
 		uint64_t last_timestamp;
 		float temperature; // (in °C)
 
-		void *offset;
 		device_imu_ahrs_type *ahrs;
 
 		device_imu_event_callback callback;
@@ -163,7 +165,7 @@ extern "C"
 
 	device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_callback callback);
 
-	device_imu_error_type device_imu_reset_calibration(device_imu_type *device);
+	device_imu_error_type device_imu_reset_calibration(device_imu_type *device, bool gyro, bool accel, bool magnet);
 
 	device_imu_error_type device_imu_load_calibration(device_imu_type *device, const char *path);
 
@@ -172,6 +174,8 @@ extern "C"
 	device_imu_error_type device_imu_clear(device_imu_type *device);
 
 	device_imu_error_type device_imu_calibrate(device_imu_type *device, uint32_t iterations, bool gyro, bool accel, bool magnet);
+
+	bool device_imu_using_magnet();
 
 	device_imu_error_type device_imu_read(device_imu_type *device, int timeout);
 
