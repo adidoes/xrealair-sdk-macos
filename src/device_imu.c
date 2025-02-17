@@ -35,7 +35,10 @@
 #include <wchar.h>
 
 #include <Fusion/Fusion.h>
-#include <json-c/json.h>
+#include "json.h"
+
+#include <libkern/OSByteOrder.h>
+#include <machine/endian.h>
 
 #include <hidapi/hidapi.h>
 
@@ -43,6 +46,30 @@
 #include "hid_ids.h"
 
 #define GRAVITY_G (9.806f)
+
+#ifndef htole16
+#define htole16(x) OSSwapHostToLittleInt16(x)
+#endif
+
+#ifndef htole32
+#define htole32(x) OSSwapHostToLittleInt32(x)
+#endif
+
+#ifndef htole64
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#endif
+
+#ifndef le16toh
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+#endif
+
+#ifndef le32toh
+#define le32toh(x) OSSwapLittleToHostInt32(x)
+#endif
+
+#ifndef le64toh
+#define le64toh(x) OSSwapLittleToHostInt64(x)
+#endif
 
 #ifndef NDEBUG
 #define device_imu_error(msg) fprintf(stderr, "ERROR: %s\n", msg)

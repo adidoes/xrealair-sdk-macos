@@ -32,10 +32,37 @@
 #include <string.h>
 #include <time.h>
 
+#include <libkern/OSByteOrder.h>
+#include <machine/endian.h>
+
 #include <hidapi/hidapi.h>
 
 #include "crc32.h"
 #include "hid_ids.h"
+
+#ifndef htole16
+#define htole16(x) OSSwapHostToLittleInt16(x)
+#endif
+
+#ifndef htole32
+#define htole32(x) OSSwapHostToLittleInt32(x)
+#endif
+
+#ifndef htole64
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#endif
+
+#ifndef le16toh
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+#endif
+
+#ifndef le32toh
+#define le32toh(x) OSSwapLittleToHostInt32(x)
+#endif
+
+#ifndef le64toh
+#define le64toh(x) OSSwapLittleToHostInt64(x)
+#endif
 
 #ifndef NDEBUG
 #define device_mcu_error(msg) fprintf(stderr, "ERROR: %s\n", msg)
