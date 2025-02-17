@@ -25,6 +25,20 @@ set_target_properties(json-c-static PROPERTIES
     STATIC_LIBRARY TRUE
 )
 
+set(GSL_DISABLE_TESTS ON)
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(modules/gsl)
+set_target_properties(gsl PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    STATIC_LIBRARY TRUE
+)
+
+add_subdirectory(modules/magnetometer-calibrate)
+set_target_properties(magnetometer-calibrate PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    STATIC_LIBRARY TRUE
+)
+
 add_library(xrealair SHARED
     src/crc32.c
     src/device.c
@@ -49,12 +63,16 @@ target_include_directories(xrealair
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/hidapi
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/Fusion
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/json-c
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/gsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/magnetometer-calibrate/include
 )
 
 target_link_libraries(xrealair PRIVATE
     -static hidapi_darwin
     -static Fusion
     -static json-c-static
+    -static gsl
+    -static magnetometer-calibrate
     m ${IOKIT} ${COREFOUNDATION}
 )
 

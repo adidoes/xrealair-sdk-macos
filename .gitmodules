@@ -7,3 +7,9 @@
 [submodule "modules/json-c"]
 	path = modules/json-c
 	url = https://github.com/json-c/json-c.git
+[submodule "modules/magnetometer-calibrate"]
+	path = modules/magnetometer-calibrate
+	url = https://github.com/wheaney/magnetometer-calibrate.git
+[submodule "modules/gsl"]
+	path = modules/gsl
+	url = https://git.savannah.gnu.org/git/gsl.git
