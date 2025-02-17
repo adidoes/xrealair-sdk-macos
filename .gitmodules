@@ -10,6 +10,3 @@
 [submodule "modules/magnetometer-calibrate"]
 	path = modules/magnetometer-calibrate
 	url = https://github.com/wheaney/magnetometer-calibrate.git
-[submodule "modules/gsl"]
-	path = modules/gsl
-	url = https://github.com/ampl/gsl.git
