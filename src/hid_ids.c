@@ -9,10 +9,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,15 +50,18 @@ const int xreal_imu_interface_ids[NUM_SUPPORTED_PRODUCTS] = {
 };
 
 const int xreal_mcu_interface_ids[NUM_SUPPORTED_PRODUCTS] = {
-    4,  // XREAL Air
-    4,  // XREAL Air 2
-    4,  // XREAL Air 2 Pro
-    -1  // TODO - XREAL Air 2 Ultra MCU support via interface 0
+    4, // XREAL Air
+    4, // XREAL Air 2
+    4, // XREAL Air 2 Pro
+    0  // XREAL Air 2 Ultra MCU
 };
 
-static int xreal_product_index(uint16_t product_id) {
-    for (int i = 0; i < NUM_SUPPORTED_PRODUCTS; i++) {
-        if (xreal_product_ids[i] == product_id) {
+static int xreal_product_index(uint16_t product_id)
+{
+    for (int i = 0; i < NUM_SUPPORTED_PRODUCTS; i++)
+    {
+        if (xreal_product_ids[i] == product_id)
+        {
             return i;
         }
     }
@@ -66,26 +69,35 @@ static int xreal_product_index(uint16_t product_id) {
     return -1;
 }
 
-bool is_xreal_product_id(uint16_t product_id) {
+bool is_xreal_product_id(uint16_t product_id)
+{
     return xreal_product_index(product_id) >= 0;
 }
 
-int xreal_imu_interface_id(uint16_t product_id) {
+int xreal_imu_interface_id(uint16_t product_id)
+{
     const int index = xreal_product_index(product_id);
 
-    if (index >= 0) {
+    if (index >= 0)
+    {
         return xreal_imu_interface_ids[index];
-    } else {
+    }
+    else
+    {
         return -1;
     }
 }
 
-int xreal_mcu_interface_id(uint16_t product_id) {
+int xreal_mcu_interface_id(uint16_t product_id)
+{
     const int index = xreal_product_index(product_id);
 
-    if (index >= 0) {
+    if (index >= 0)
+    {
         return xreal_mcu_interface_ids[index];
-    } else {
+    }
+    else
+    {
         return -1;
     }
 }

@@ -10,10 +10,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -75,6 +75,7 @@
 #define DEVICE_MCU_MSG_W_BOOT_UPDATE_FINISH 0x1105
 
 #define DEVICE_MCU_MSG_P_START_HEARTBEAT 0x6c02
+#define DEVICE_MCU_MSG_P_DISPLAY_TOGGLED 0x6C04
 #define DEVICE_MCU_MSG_P_BUTTON_PRESSED 0x6C05
 #define DEVICE_MCU_MSG_P_END_HEARTBEAT 0x6c12
 #define DEVICE_MCU_MSG_P_ASYNC_TEXT_LOG 0x6c09
@@ -101,91 +102,115 @@
 #define DEVICE_MCU_BUTTON_VIRT_BRIGHTNESS_DOWN 0x7
 #define DEVICE_MCU_BUTTON_VIRT_UP 0x8
 #define DEVICE_MCU_BUTTON_VIRT_DOWN 0x9
+#define DEVICE_MCU_BUTTON_VIRT_MODE_2D 0xA
+#define DEVICE_MCU_BUTTON_VIRT_MODE_3D 0xB
+#define DEVICE_MCU_BUTTON_VIRT_BLEND_CYCLE 0xC
+#define DEVICE_MCU_BUTTON_VIRT_CONTROL_TOGGLE 0xF
+
+#define DEVICE_MCU_BLEND_STATE_LOW 0x0
+#define DEVICE_MCU_BLEND_STATE_MEDIUM 0x2
+#define DEVICE_MCU_BLEND_STATE_FULL 0x3
+
+#define DEVICE_MCU_CONTROL_MODE_BRIGHTNESS 0x0
+#define DEVICE_MCU_CONTROL_MODE_VOLUME 0x1
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-enum device_mcu_error_t {
-	DEVICE_MCU_ERROR_NO_ERROR = 0,
-	DEVICE_MCU_ERROR_NO_DEVICE = 1,
-	DEVICE_MCU_ERROR_NO_HANDLE = 2,
-	DEVICE_MCU_ERROR_NO_ACTIVATION = 3,
-	DEVICE_MCU_ERROR_WRONG_SIZE = 4,
-	DEVICE_MCU_ERROR_UNPLUGGED = 5,
-	DEVICE_MCU_ERROR_UNEXPECTED = 6,
-	DEVICE_MCU_ERROR_WRONG_HEAD = 7,
-	DEVICE_MCU_ERROR_INVALID_LENGTH = 8,
-	DEVICE_MCU_ERROR_NOT_INITIALIZED = 9,
-	DEVICE_MCU_ERROR_PAYLOAD_FAILED = 10,
-	DEVICE_MCU_ERROR_UNKNOWN = 11,
-};
-
-struct __attribute__((__packed__)) device_mcu_packet_t {
-	uint8_t head;
-	uint32_t checksum;
-	uint16_t length;
-	uint64_t timestamp;
-	uint16_t msgid;
-	uint8_t reserved [5];
-	union {
-		char text [42];
-		uint8_t data [42];
+	enum device_mcu_error_t
+	{
+		DEVICE_MCU_ERROR_NO_ERROR = 0,
+		DEVICE_MCU_ERROR_NO_DEVICE = 1,
+		DEVICE_MCU_ERROR_NO_HANDLE = 2,
+		DEVICE_MCU_ERROR_NO_ACTIVATION = 3,
+		DEVICE_MCU_ERROR_WRONG_SIZE = 4,
+		DEVICE_MCU_ERROR_UNPLUGGED = 5,
+		DEVICE_MCU_ERROR_UNEXPECTED = 6,
+		DEVICE_MCU_ERROR_WRONG_HEAD = 7,
+		DEVICE_MCU_ERROR_INVALID_LENGTH = 8,
+		DEVICE_MCU_ERROR_NOT_INITIALIZED = 9,
+		DEVICE_MCU_ERROR_PAYLOAD_FAILED = 10,
+		DEVICE_MCU_ERROR_UNKNOWN = 11,
 	};
-};
 
-enum device_mcu_event_t {
-	DEVICE_MCU_EVENT_UNKNOWN = 0,
-	DEVICE_MCU_EVENT_SCREEN_ON = 1,
-	DEVICE_MCU_EVENT_SCREEN_OFF = 2,
-	DEVICE_MCU_EVENT_BRIGHTNESS_UP = 3,
-	DEVICE_MCU_EVENT_BRIGHTNESS_DOWN = 4,
-	DEVICE_MCU_EVENT_MESSAGE = 5,
-};
+	struct __attribute__((__packed__)) device_mcu_packet_t
+	{
+		uint8_t head;
+		uint32_t checksum;
+		uint16_t length;
+		uint64_t timestamp;
+		uint16_t msgid;
+		uint8_t reserved[5];
+		union
+		{
+			char text[42];
+			uint8_t data[42];
+		};
+	};
 
-typedef enum device_mcu_error_t device_mcu_error_type;
-typedef struct device_mcu_packet_t device_mcu_packet_type;
-typedef enum device_mcu_event_t device_mcu_event_type;
-typedef void (*device_mcu_event_callback)(
-		uint64_t timestamp,
-		device_mcu_event_type event,
-		uint8_t brightness,
-		const char* msg
-);
+	enum device_mcu_event_t
+	{
+		DEVICE_MCU_EVENT_UNKNOWN = 0,
+		DEVICE_MCU_EVENT_SCREEN_ON = 1,
+		DEVICE_MCU_EVENT_SCREEN_OFF = 2,
+		DEVICE_MCU_EVENT_BRIGHTNESS_UP = 3,
+		DEVICE_MCU_EVENT_BRIGHTNESS_DOWN = 4,
+		DEVICE_MCU_EVENT_MESSAGE = 5,
+		DEVICE_MCU_EVENT_DISPLAY_MODE_2D = 6,
+		DEVICE_MCU_EVENT_DISPLAY_MODE_3D = 7,
+		DEVICE_MCU_EVENT_BLEND_CYCLE = 8,
+		DEVICE_MCU_EVENT_CONTROL_TOGGLE = 9,
+		DEVICE_MCU_EVENT_VOLUME_UP = 10,
+		DEVICE_MCU_EVENT_VOLUME_DOWN = 11,
+	};
 
-struct device_mcu_t {
-	uint16_t vendor_id;
-	uint16_t product_id;
-	
-	void* handle;
+	typedef enum device_mcu_error_t device_mcu_error_type;
+	typedef struct device_mcu_packet_t device_mcu_packet_type;
+	typedef enum device_mcu_event_t device_mcu_event_type;
+	typedef void (*device_mcu_event_callback)(
+			uint64_t timestamp,
+			device_mcu_event_type event,
+			uint8_t brightness,
+			const char *msg);
 
-	bool activated;
-	char mcu_app_fw_version [42];
-	char dp_fw_version [42];
-	char dsp_fw_version [42];
-	
-	bool active;
-	uint8_t brightness;
-	uint8_t disp_mode;
-	
-	device_mcu_event_callback callback;
-};
+	struct device_mcu_t
+	{
+		uint16_t vendor_id;
+		uint16_t product_id;
 
-typedef struct device_mcu_t device_mcu_type;
+		void *handle;
 
-device_mcu_error_type device_mcu_open(device_mcu_type* device, device_mcu_event_callback callback);
+		bool activated;
+		char mcu_app_fw_version[42];
+		char dp_fw_version[42];
+		char dsp_fw_version[42];
 
-device_mcu_error_type device_mcu_clear(device_mcu_type* device);
+		bool active;
+		uint8_t brightness;
+		uint8_t disp_mode;
+		uint8_t blend_state;
+		uint8_t control_mode;
 
-device_mcu_error_type device_mcu_read(device_mcu_type* device, int timeout);
+		device_mcu_event_callback callback;
+	};
 
-device_mcu_error_type device_mcu_poll_display_mode(device_mcu_type* device);
+	typedef struct device_mcu_t device_mcu_type;
 
-device_mcu_error_type device_mcu_update_display_mode(device_mcu_type* device);
+	device_mcu_error_type device_mcu_open(device_mcu_type *device, device_mcu_event_callback callback);
 
-device_mcu_error_type device_mcu_update_firmware(device_mcu_type* device, const char* path);
+	device_mcu_error_type device_mcu_clear(device_mcu_type *device);
 
-device_mcu_error_type device_mcu_close(device_mcu_type* device);
+	device_mcu_error_type device_mcu_read(device_mcu_type *device, int timeout);
+
+	device_mcu_error_type device_mcu_poll_display_mode(device_mcu_type *device);
+
+	device_mcu_error_type device_mcu_update_display_mode(device_mcu_type *device);
+
+	device_mcu_error_type device_mcu_update_firmware(device_mcu_type *device, const char *path);
+
+	device_mcu_error_type device_mcu_close(device_mcu_type *device);
 
 #ifdef __cplusplus
 } // extern "C"

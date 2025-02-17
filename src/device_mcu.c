@@ -32,43 +32,18 @@
 #include <string.h>
 #include <time.h>
 
-#include <libkern/OSByteOrder.h>
-#include <machine/endian.h>
-
 #include <hidapi/hidapi.h>
 
 #include "crc32.h"
 #include "hid_ids.h"
-
-#ifndef htole16
-#define htole16(x) OSSwapHostToLittleInt16(x)
-#endif
-
-#ifndef htole32
-#define htole32(x) OSSwapHostToLittleInt32(x)
-#endif
-
-#ifndef htole64
-#define htole64(x) OSSwapHostToLittleInt64(x)
-#endif
-
-#ifndef le16toh
-#define le16toh(x) OSSwapLittleToHostInt16(x)
-#endif
-
-#ifndef le32toh
-#define le32toh(x) OSSwapLittleToHostInt32(x)
-#endif
-
-#ifndef le64toh
-#define le64toh(x) OSSwapLittleToHostInt64(x)
-#endif
 
 #ifndef NDEBUG
 #define device_mcu_error(msg) fprintf(stderr, "ERROR: %s\n", msg)
 #else
 #define device_mcu_error(msg) (0)
 #endif
+
+#define device_mcu_warning(msg) device_mcu_error(msg)
 
 #define MAX_PACKET_SIZE 64
 #define PACKET_HEAD 0xFD
@@ -285,8 +260,7 @@ device_mcu_error_type device_mcu_open(device_mcu_type *device, device_mcu_event_
 
 	if (!device->activated)
 	{
-		device_mcu_error("Device is not activated");
-		return DEVICE_MCU_ERROR_NO_ACTIVATION;
+		device_mcu_warning("Device is not activated");
 	}
 
 	if (!send_payload_action(device, DEVICE_MCU_MSG_R_MCU_APP_FW_VERSION, 0, NULL))
@@ -438,7 +412,7 @@ device_mcu_error_type device_mcu_read(device_mcu_type *device, int timeout)
 	const uint16_t msgid = le16toh(packet.msgid);
 	const uint16_t length = le16toh(packet.length);
 
-	const size_t data_len = (size_t) & (packet.data) - (size_t) & (packet.length);
+	const size_t data_len = (size_t)&(packet.data) - (size_t)&(packet.length);
 
 #ifndef NDEBUG
 	printf("MSG: %d = %04x (%d)\n", msgid, msgid, length);
@@ -460,9 +434,35 @@ device_mcu_error_type device_mcu_read(device_mcu_type *device, int timeout)
 	{
 		break;
 	}
+	case DEVICE_MCU_MSG_P_DISPLAY_TOGGLED:
+	{
+		const uint8_t value = packet.data[0];
+
+		device->active = value;
+
+		if (device->active)
+		{
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_SCREEN_ON,
+					device->brightness,
+					NULL);
+		}
+		else
+		{
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_SCREEN_OFF,
+					device->brightness,
+					NULL);
+		}
+		break;
+	}
 	case DEVICE_MCU_MSG_P_BUTTON_PRESSED:
 	{
-		// const uint8_t phys_button = packet.data[0];
+		const uint8_t phys_button = packet.data[0];
 		const uint8_t virt_button = packet.data[4];
 		const uint8_t value = packet.data[8];
 
@@ -507,6 +507,60 @@ device_mcu_error_type device_mcu_read(device_mcu_type *device, int timeout)
 					device,
 					timestamp,
 					DEVICE_MCU_EVENT_BRIGHTNESS_DOWN,
+					device->brightness,
+					NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_UP:
+			if (device->control_mode == DEVICE_MCU_CONTROL_MODE_VOLUME)
+				device_mcu_callback(
+						device,
+						timestamp,
+						DEVICE_MCU_EVENT_VOLUME_UP,
+						device->brightness,
+						NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_DOWN:
+			if (device->control_mode == DEVICE_MCU_CONTROL_MODE_VOLUME)
+				device_mcu_callback(
+						device,
+						timestamp,
+						DEVICE_MCU_EVENT_VOLUME_DOWN,
+						device->brightness,
+						NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_MODE_2D:
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_DISPLAY_MODE_2D,
+					device->brightness,
+					NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_MODE_3D:
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_DISPLAY_MODE_3D,
+					device->brightness,
+					NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_BLEND_CYCLE:
+			device->blend_state = value;
+
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_BLEND_CYCLE,
+					device->brightness,
+					NULL);
+			break;
+		case DEVICE_MCU_BUTTON_VIRT_CONTROL_TOGGLE:
+			device->control_mode = value;
+
+			device_mcu_callback(
+					device,
+					timestamp,
+					DEVICE_MCU_EVENT_CONTROL_TOGGLE,
 					device->brightness,
 					NULL);
 			break;
