@@ -29,6 +29,15 @@ set(GSL_DISABLE_TESTS ON)
 set(GSL_DISABLE_WARNINGS ON)
 set(GSL_INSTALL OFF)
 set(NO_AMPL_BINDINGS ON)
+set(AMPL_BUILD_ASL OFF)
+set(BUILD_AMPL OFF)
+set(ENABLE_AMPL OFF)
+
+if(DEFINED ENV{GITHUB_ACTIONS})
+  message(STATUS "Running on GitHub Actions; forcing CMAKE_OSX_ARCHITECTURES to x86_64")
+  set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Override architecture for CI" FORCE)
+endif()
+
 add_subdirectory(modules/gsl)
 set_target_properties(gsl PROPERTIES
     POSITION_INDEPENDENT_CODE ON
