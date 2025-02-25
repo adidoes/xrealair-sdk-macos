@@ -24,6 +24,7 @@
 
 #include "device_imu.h"
 #include "device.h"
+#include "wchar.h"
 
 #include <Fusion/FusionAxes.h>
 #include <Fusion/FusionMath.h>
@@ -266,11 +267,32 @@ device_imu_error_type device_imu_open(device_imu_type *device, device_imu_event_
 		int interface_id = xreal_imu_interface_id(it->product_id);
 		if (interface_id != -1 && it->interface_number == interface_id)
 		{
-#ifndef NDEBUG
-			printf("Found IMU device with product_id 0x%x on interface %d\n", it->product_id, interface_id);
-#endif
 			device->product_id = it->product_id;
 			device->handle = hid_open_path(it->path);
+
+			if (device->handle != NULL)
+			{
+				wchar_t serial_number[256];
+				int result = hid_get_serial_number_string(device->handle, serial_number, 256);
+				if (result == 0)
+				{
+					size_t needed_size = wcstombs(NULL, serial_number, 0);
+					device->serial_number = malloc(needed_size + 1);
+					if (device->serial_number != NULL)
+					{
+						wcstombs(device->serial_number, serial_number, needed_size + 1);
+#ifndef NDEBUG
+						printf("Found IMU device with product_id 0x%x, interface %d, serial number %s\n",
+									 device->product_id, interface_id, device->serial_number);
+#endif
+					}
+				}
+				else
+				{
+					device_imu_error("Failed to retrieve serial number");
+				}
+			}
+
 			break;
 		}
 
@@ -1087,6 +1109,11 @@ device_imu_error_type device_imu_close(device_imu_type *device)
 	if (device->offset)
 	{
 		free(device->offset);
+	}
+
+	if (device->serial_number)
+	{
+		free(device->serial_number);
 	}
 
 	if (device->handle)

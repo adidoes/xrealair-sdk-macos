@@ -65,7 +65,6 @@ extern "C"
 		DEVICE_IMU_ERROR_NOT_INITIALIZED = 13,
 		DEVICE_IMU_ERROR_PAYLOAD_FAILED = 14,
 		DEVICE_IMU_ERROR_UNKNOWN = 15,
-		DEVICE_IMU_ERROR_PARSING_FAILED = 16,
 	};
 
 	struct __attribute__((__packed__)) device_imu_packet_t
@@ -144,6 +143,7 @@ extern "C"
 	{
 		uint16_t vendor_id;
 		uint16_t product_id;
+		char *serial_number;
 
 		void *handle;
 

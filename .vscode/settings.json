@@ -10,6 +10,8 @@
     "string.h": "c",
     "json_object_iterator.h": "c",
     "hidapi.h": "c",
-    "fusionaxes.h": "c"
+    "fusionaxes.h": "c",
+    "device.h": "c",
+    "wchar.h": "c"
   }
 }
