@@ -16,11 +16,11 @@ set_target_properties(hidapi_darwin PROPERTIES
     STATIC_LIBRARY TRUE
 )
 
-set(BUILD_SHARED_LIBS OFF)
-set(DISABLE_SHARED ON)
-set(BUILD_STATIC_LIBS ON)
+set(DISABLE_SHARED ON CACHE BOOL "Don't build json-c shared library")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries by default")
+set(BUILD_STATIC_LIBS ON CACHE BOOL "Build static libraries")
 add_subdirectory(modules/json-c)
-set_target_properties(json-c-static PROPERTIES
+set_target_properties(json-c PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     STATIC_LIBRARY TRUE
 )
@@ -54,7 +54,7 @@ target_include_directories(xrealair
 target_link_libraries(xrealair PRIVATE
     -static hidapi_darwin
     -static Fusion
-    -static json-c-static
+    -static json-c
     m ${IOKIT} ${COREFOUNDATION}
 )
 
