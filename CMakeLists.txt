@@ -34,8 +34,8 @@ add_library(xrealair SHARED
 )
 set_target_properties(xrealair PROPERTIES
 	OUTPUT_NAME "xrealair"
-    VERSION 0.1.2
-    SOVERSION 0.1.2
+    VERSION 0.1.3
+    SOVERSION 0.1.3
 )
 
 target_compile_options(xrealair PRIVATE -Wall -Wextra -fPIC -DNDEBUG)
