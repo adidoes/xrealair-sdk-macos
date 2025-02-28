@@ -118,19 +118,19 @@ int main(int argc, const char **argv)
 		device_imu_type dev_imu;
 		while (1)
 		{
-			if (DEVICE_IMU_ERROR_NO_ERROR == device_imu_open(&dev_imu, test_imu))
+			while (DEVICE_IMU_ERROR_NO_ERROR != device_imu_open(&dev_imu, test_imu))
 			{
-				break;
+				printf("Failed to connect to IMU. Retrying in 1 second...\n");
+				sleep(1);
 			}
-			printf("Failed to connect to IMU. Retrying in 1 second...\n");
-			sleep(1);
-		}
 
-		device_imu_clear(&dev_imu);
-		device_imu_calibrate(&dev_imu, 1000, true, true, false);
-		while (DEVICE_IMU_ERROR_NO_ERROR == device_imu_read(&dev_imu, -1))
-			;
-		device_imu_close(&dev_imu);
+			device_imu_clear(&dev_imu);
+			device_imu_calibrate(&dev_imu, 1000, true, true, false);
+			while (DEVICE_IMU_ERROR_NO_ERROR == device_imu_read(&dev_imu, -1))
+				;
+			device_imu_close(&dev_imu);
+			printf("IMU disconnected. Waiting for reconnection...\n");
+		}
 		return 0;
 	}
 	else
@@ -140,18 +140,18 @@ int main(int argc, const char **argv)
 
 		while (1)
 		{
-			if (DEVICE_MCU_ERROR_NO_ERROR == device_mcu_open(&dev_mcu, test_mcu))
+			while (DEVICE_MCU_ERROR_NO_ERROR != device_mcu_open(&dev_mcu, test_mcu))
 			{
-				break;
+				printf("Failed to connect to MCU. Retrying in 1 second...\n");
+				sleep(1);
 			}
-			printf("Failed to connect to MCU. Retrying in 1 second...\n");
-			sleep(1);
-		}
 
-		device_mcu_clear(&dev_mcu);
-		while (DEVICE_MCU_ERROR_NO_ERROR == device_mcu_read(&dev_mcu, -1))
-			;
-		device_mcu_close(&dev_mcu);
+			device_mcu_clear(&dev_mcu);
+			while (DEVICE_MCU_ERROR_NO_ERROR == device_mcu_read(&dev_mcu, -1))
+				;
+			device_mcu_close(&dev_mcu);
+			printf("MCU disconnected. Waiting for reconnection...\n");
+		}
 
 		if (pid != waitpid(pid, &status, 0))
 		{
